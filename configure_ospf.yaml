@@ -1,0 +1,47 @@
+---
+  - name: Configure Single Area OSPF
+    hosts: routers
+    gather_facts: false
+    connection: local
+    vars:
+      cli:
+        username: cisco
+        password: cisco123!
+    tasks:
+
+      - name: Configure OSPF for Manila
+        when: ansible_host == "192.168.20.1"
+        ios_config:
+          provider: "{{ cli }}"
+          parents: router ospf 100
+          lines:
+            - network 10.0.0.0 0.0.0.3 area 0
+            - network 192.168.20.0 0.0.0.255 area 0
+            - passive-interface FastEthernet0/1
+      
+      - name: Configure OSPF for Caloocan City
+        when: ansible_host == "10.0.0.2"
+        ios_config:
+          provider: "{{ cli }}"
+          parents: router ospf 100
+          lines:
+            - network 10.0.0.0 0.0.0.3 area 0
+            - network 10.0.0.4 0.0.0.3 area 0
+
+      - name: display running config
+        ios_command:
+          provider: "{{ cli }}"
+          commands:
+            - show running-config
+        register: config
+
+      - name: SAVE OUTPUT TO ./iosconfig/
+        copy: 
+          content: "{{config.stdout[0]}}"
+          dest: "iosconfig/show_run_{{inventory_hostname}}.txt"
+
+      - name: Save Configuration
+        ios_config:
+          provider: "{{ cli }}"
+          lines:
+            do write

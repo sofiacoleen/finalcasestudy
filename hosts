@@ -1,0 +1,6 @@
+Manila          ansible_host=192.168.20.1
+Caloocan        ansible_host=10.0.0.2
+
+[routers]
+Manila
+Caloocan
